@@ -19,7 +19,8 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # Image name is computed per-run in the image job (owner lowercased + app
+  # name), so a fork pushes to its own namespace instead of mine.
 
 jobs:
   test:
@@ -58,6 +59,12 @@ jobs:
       - name: Derive version
         id: ver
         run: echo "version=$(git describe --tags --always --dirty)" >> "$GITHUB_OUTPUT"
+
+      # GHCR requires lowercase, and we want forks to push to their own owner
+      # namespace. github.repository_owner can contain uppercase, so lowercase
+      # it (bash ${VAR,,}) and append the fixed app name.
+      - name: Derive image name
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY_OWNER,,}/nahui-app" >> "$GITHUB_ENV"
 
       - name: Log in to registry
         uses: docker/login-action@v3
