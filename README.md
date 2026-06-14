@@ -107,7 +107,7 @@ Each pillar exists to defeat a specific attack class.
 
 ---
 
-## The Demo (the money shot)
+## Demo
 
 ```bash
 # 1. Push a commit → pipeline builds, scans, signs, attests, pushes
@@ -124,7 +124,7 @@ kubectl apply -f deploy/verified.yaml      # ✅ pod scheduled
 kubectl apply -f deploy/unsigned.yaml      # ❌ DENIED by policy
 ```
 
-That final contrast is the whole point: it makes invisible cryptographic work *visible*.
+The two deploys above are the test: the verified image runs, the unsigned one is refused at admission.
 
 ---
 
@@ -133,7 +133,7 @@ That final contrast is the whole point: it makes invisible cryptographic work *v
 - [x] **Phase 1** — Baseline app + naive (insecure) pipeline
 - [x] **Phase 2** — SBOM generation + vuln scanning, gate on critical CVEs
 - [x] **Phase 3** — cosign keyless signing + Rekor transparency entries
-- [ ] **Phase 4** — SLSA provenance attestation (target Build L3)
+- [x] **Phase 4** — SLSA provenance attestation (target Build L3)
 - [ ] **Phase 5** — Admission control: verify signature + provenance + SBOM before scheduling
 - [ ] **Phase 6** — Threat model write-up + architecture diagram + demo recording
 

@@ -52,7 +52,8 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write   # OIDC token for cosign keyless signing (Fulcio/Rekor)
+      id-token: write      # OIDC token for cosign keyless signing (Fulcio/Rekor)
+      attestations: write  # write SLSA provenance + SBOM attestations (Phase 4)
     steps:
       - uses: actions/checkout@v4
 
@@ -136,5 +137,23 @@ jobs:
           DIGEST: ${{ steps.push.outputs.digest }}
         run: cosign sign --yes "${REGISTRY}/${IMAGE_NAME}@${DIGEST}"
 
-      # TODO(Phase 4): SLSA provenance via slsa-github-generator (Build L3).
-      # TODO(Phase 4): cosign attest the SBOM + provenance to the image digest.
+      # Pillar 3: SLSA build provenance. GitHub's native artifact attestations
+      # generate non-falsifiable provenance (SLSA Build L3) describing how/where
+      # the image was built, sign it keyless, log it in Rekor, and push it to
+      # the registry as an attestation bound to the image digest.
+      - name: Attest build provenance (SLSA)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      # Attach the SBOM as a signed attestation too, so a verifier can confirm
+      # the bill of materials came from this build and wasn't swapped.
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          sbom-path: nahui-app.spdx.json
+          push-to-registry: true
