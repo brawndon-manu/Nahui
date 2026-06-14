@@ -52,7 +52,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-      # id-token: write   # TODO(Phase 3): required for cosign keyless signing
+      id-token: write   # OIDC token for cosign keyless signing (Fulcio/Rekor)
     steps:
       - uses: actions/checkout@v4
 
@@ -110,13 +110,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Only reached if the scan passed. Push the already-built, already-scanned
-      # image (same tags loaded above).
+      # Only reached if the scan passed. Re-runs from the buildx cache, so it's
+      # cheap, and gives us the registry digest to sign by.
       - name: Push image
-        run: |
-          docker push "${REGISTRY}/${IMAGE_NAME}:${{ steps.ver.outputs.version }}"
-          docker push "${REGISTRY}/${IMAGE_NAME}:latest"
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            VERSION=${{ steps.ver.outputs.version }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.ver.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
-      # TODO(Phase 3): cosign keyless-sign the image + log it in Rekor.
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      # Pillar 2: keyless-sign the image by digest. cosign uses the job's OIDC
+      # token (no stored keys), gets a short-lived cert from Fulcio, and records
+      # the signature in the Rekor transparency log. Signing the digest, not a
+      # tag, so the signature is bound to exact content.
+      - name: Sign image (keyless)
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: cosign sign --yes "${REGISTRY}/${IMAGE_NAME}@${DIGEST}"
+
       # TODO(Phase 4): SLSA provenance via slsa-github-generator (Build L3).
       # TODO(Phase 4): cosign attest the SBOM + provenance to the image digest.

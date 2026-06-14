@@ -14,6 +14,11 @@ VERSION    ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo d
 IMAGE_REF  := $(IMAGE):$(VERSION)
 SBOM_DIR   := sbom
 
+# Keyless verification identity: the CI workflow's OIDC subject + issuer.
+# Used by `make verify` to confirm a signature came from this repo's pipeline.
+OIDC_ISSUER ?= https://token.actions.githubusercontent.com
+CERT_IDENTITY_RE ?= ^https://github.com/brawndon-manu/nahui/.github/workflows/.+@.+
+
 .DEFAULT_GOAL := help
 
 # --- App (Phase 1) ---------------------------------------------------------
@@ -58,9 +63,12 @@ attest: ## Attach the SBOM as a signed attestation
 		--type cyclonedx $(IMAGE_REF)
 
 .PHONY: verify
-verify: ## Verify signature + provenance + SBOM attestation
-	COSIGN_EXPERIMENTAL=1 cosign verify $(IMAGE_REF)
-	COSIGN_EXPERIMENTAL=1 cosign verify-attestation --type slsaprovenance $(IMAGE_REF)
+verify: ## Verify the image signature against this repo's CI identity (keyless)
+	cosign verify $(IMAGE_REF) \
+		--certificate-oidc-issuer "$(OIDC_ISSUER)" \
+		--certificate-identity-regexp "$(CERT_IDENTITY_RE)"
+	# TODO(Phase 4): also verify the SLSA provenance + SBOM attestations:
+	#   cosign verify-attestation --type slsaprovenance $(IMAGE_REF) ...
 
 # --- Pillar 4: Enforce (Phase 5) -------------------------------------------
 .PHONY: deploy-verified
