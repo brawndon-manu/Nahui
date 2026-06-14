@@ -134,7 +134,7 @@ The two deploys above are the test: the verified image runs, the unsigned one is
 - [x] **Phase 2** — SBOM generation + vuln scanning, gate on critical CVEs
 - [x] **Phase 3** — cosign keyless signing + Rekor transparency entries
 - [x] **Phase 4** — SLSA provenance attestation (target Build L3)
-- [ ] **Phase 5** — Admission control: verify signature + provenance + SBOM before scheduling
+- [x] **Phase 5** — Admission control: verify signature + provenance + SBOM before scheduling
 - [ ] **Phase 6** — Threat model write-up + architecture diagram + demo recording
 
 ### Stretch

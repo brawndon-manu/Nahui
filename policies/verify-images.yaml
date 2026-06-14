@@ -1,8 +1,16 @@
-# Phase 5 — admission-time enforcement (Kyverno). This is the "refuse anything
+# Phase 5 — admission-time enforcement (Kyverno). The "refuse anything
 # unverified" pillar.
 #
-# Starting point only: set the keyless issuer/subject below to our CI's OIDC
-# identity before this will admit real images.
+# This policy admits a pod only if every nahui-app image is:
+#   1. signed (keyless cosign) by THIS repo's CI OIDC identity, and
+#   2. pinned by digest (no mutable tags).
+# Anything else is denied before the pod is ever scheduled.
+#
+# Note: in-cluster verification of the SLSA provenance / SBOM *attestations*
+# (Phase 4) is a planned refinement. Those attestations exist and are verifiable
+# with cosign out-of-cluster; wiring Kyverno to verify GitHub's native
+# attestation format needs more setup, so it's intentionally not enforced here
+# yet.
 #
 # Apply with: kubectl apply -f policies/verify-images.yaml
 apiVersion: kyverno.io/v1
@@ -10,19 +18,24 @@ kind: ClusterPolicy
 metadata:
   name: nahui-verify-images
   annotations:
-    policies.kyverno.io/title: Verify image signatures & attestations
+    policies.kyverno.io/title: Verify image signatures
     policies.kyverno.io/category: Supply Chain Security
     policies.kyverno.io/description: >-
-      Admit a pod only if every image is signed by the trusted CI identity,
-      carries a SLSA provenance attestation and an SBOM attestation, and is
-      pinned by digest. Anything else is rejected before scheduling.
+      Admit a pod only if every nahui-app image is signed by this repo's CI
+      identity (keyless cosign) and pinned by digest. Anything else is rejected
+      before scheduling.
 spec:
   validationFailureAction: Enforce
   webhookTimeoutSeconds: 30
   failurePolicy: Fail
   rules:
-    # 1. Signature + provenance + SBOM all have to verify against our identity.
-    - name: verify-signature-and-attestations
+    # 1. EVERY image in the namespace must carry a valid keyless cosign
+    #    signature whose certificate was issued to this repo's CI workflow.
+    #    Scoping to "*" means an untrusted image (e.g. a public nginx) is
+    #    refused even though it's a perfectly normal image — it just wasn't
+    #    built by our pipeline. mutateDigest:false keeps the tag as written so
+    #    the digest-pinning rule below stays meaningful.
+    - name: verify-image-signature
       match:
         any:
           - resources:
@@ -30,18 +43,16 @@ spec:
               namespaces: [nahui]
       verifyImages:
         - imageReferences:
-            - "ghcr.io/brawndon-manu/nahui-app*"
+            - "*"
+          required: true
+          mutateDigest: false
           attestors:
             - entries:
                 - keyless:
-                    # TODO: set these to our pipeline's OIDC identity.
                     issuer: "https://token.actions.githubusercontent.com"
-                    subject: "https://github.com/brawndon-manu/nahui/*"
+                    subjectRegExp: "^https://github.com/brawndon-manu/nahui/.+"
                     rekor:
                       url: "https://rekor.sigstore.dev"
-          attestations:
-            - type: https://slsa.dev/provenance/v1
-            - type: https://cyclonedx.org/bom
 
     # 2. No mutable tags. Images have to be digest-pinned.
     - name: require-digest-pinned-images

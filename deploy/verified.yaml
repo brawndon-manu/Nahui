@@ -23,13 +23,16 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        # Numeric UID/GID of the distroless "nonroot" user. Required because the
+        # kubelet can't verify a non-numeric image user against runAsNonRoot.
+        runAsUser: 65532
+        runAsGroup: 65532
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: nahui-app
-          # TODO: pin to the signed digest CI prints, e.g.
-          #   ghcr.io/brawndon-manu/nahui-app@sha256:<digest>
-          image: ghcr.io/brawndon-manu/nahui-app@sha256:REPLACE_WITH_SIGNED_DIGEST
+          # Signed, digest-pinned image produced by the pipeline.
+          image: ghcr.io/brawndon-manu/nahui-app@sha256:0aea969585f4e4a6894ba2879313f95c99722f9c650315e5199f5cee640792ee
           ports:
             - containerPort: 8080
           readinessProbe:

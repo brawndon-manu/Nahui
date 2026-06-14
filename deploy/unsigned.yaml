@@ -1,7 +1,8 @@
-# Same app, but unsigned and using the :latest tag. The Phase-5 policy should
-# deny this before it ever gets scheduled: no signature, no provenance, no SBOM
-# attestation, and a mutable tag. This is the half of the demo that fails on
-# purpose.
+# The denied case: a normal, popular public image (nginx) pinned by digest.
+# Nothing wrong with nginx itself — the point is it was NOT built or signed by
+# our pipeline, so it has no cosign signature from our CI identity. The Phase-5
+# policy refuses it before it can schedule, proving the namespace only runs
+# images that came through our supply chain.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,8 +22,8 @@ spec:
         app: nahui-app-unsigned
     spec:
       containers:
-        - name: nahui-app
-          # Mutable tag, never signed or attested. Fails every check.
-          image: ghcr.io/brawndon-manu/nahui-app:latest
+        - name: app
+          # Untrusted image: digest-pinned, but never signed by our pipeline.
+          image: nginx@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
           ports:
-            - containerPort: 8080
+            - containerPort: 80
