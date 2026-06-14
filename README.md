@@ -132,8 +132,8 @@ That final contrast is the whole point: it makes invisible cryptographic work *v
 
 ## Roadmap
 
-- [ ] **Phase 1** — Baseline app + naive (insecure) pipeline
-- [ ] **Phase 2** — SBOM generation + vuln scanning, gate on critical CVEs
+- [x] **Phase 1** — Baseline app + naive (insecure) pipeline
+- [x] **Phase 2** — SBOM generation + vuln scanning, gate on critical CVEs
 - [ ] **Phase 3** — cosign keyless signing + Rekor transparency entries
 - [ ] **Phase 4** — SLSA provenance attestation (target Build L3)
 - [ ] **Phase 5** — Admission control: verify signature + provenance + SBOM before scheduling

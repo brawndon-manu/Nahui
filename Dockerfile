@@ -1,8 +1,10 @@
 # syntax=docker/dockerfile:1
 
 # --- Build stage -----------------------------------------------------------
-# Using the tag here for readability; CI pins it by digest.
-FROM golang:1.23 AS build
+# Using the tag here for readability; CI pins it by digest. Keep this current —
+# the Grype scan flags critical CVEs in the Go stdlib baked into the binary, so
+# an out-of-date builder fails the pipeline.
+FROM golang:1.26 AS build
 
 WORKDIR /src
 
