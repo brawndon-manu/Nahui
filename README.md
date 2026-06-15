@@ -10,36 +10,36 @@
 ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝
 </pre>
 <p align="center">
-  <strong>Nāhui — software supply chain security.</strong><br>
-  <em>Build-to-deploy chain of custody: signed, attested, and verified — or it doesn't run.</em>
+  <strong>Nāhui: software supply chain security.</strong><br>
+  <em>Build-to-deploy chain of custody: signed, attested, and verified, or it doesn't run.</em>
 </p>
 
 ## What is Nahui?
 
-I named it after **Nahui** (Nāhui), the Nahuatl word for *four* — the foundational ordering principle in Mexica cosmology, the number of directions, of pillars, of the cycles that hold the world together. I built it on **four pillars of supply chain trust**:
+I named it after **Nahui** (Nāhui), the Nahuatl word for *four*, the foundational ordering principle in Mexica cosmology, the number of directions, of pillars, of the cycles that hold the world together. I built it on **four pillars of supply chain trust**:
 
-1. **Know what's in it** — Software Bill of Materials (SBOM)
-2. **Prove it wasn't swapped** — cryptographic signing (Sigstore)
-3. **Prove how it was built** — build provenance (SLSA)
-4. **Refuse anything unverified** — admission-time enforcement
+1. **Know what's in it**: Software Bill of Materials (SBOM)
+2. **Prove it wasn't swapped**: cryptographic signing (Sigstore)
+3. **Prove how it was built**: build provenance (SLSA)
+4. **Refuse anything unverified**: admission-time enforcement
 
 An artifact that can't satisfy all four never runs.
 
-> Companion to [Bastión Xólot](#) — where Xólotl guards the network gateway, Nahui guards the supply chain.
+> Companion to [Bastión Xólot](#): where Xólotl guards the network gateway, Nahui guards the supply chain.
 
 ---
 
 ## The Problem
 
-Modern software is *assembled*, not written. A single container image can pull in hundreds of transitive dependencies and build tools — each one an attack surface. The last few years made this concrete:
+Modern software is *assembled*, not written. A single container image can pull in hundreds of transitive dependencies and build tools, each one an attack surface. The last few years made this concrete:
 
 | Incident | What was attacked |
 |---|---|
-| **SolarWinds** (2020) | The *build process* — malicious code injected during build, not in source |
+| **SolarWinds** (2020) | The *build process*: malicious code injected during build, not in source |
 | **Log4Shell** (2021) | A single transitive dependency exposed millions of services |
 | **xz/liblzma backdoor** (2024) | A multi-year social-engineering attack on a maintainer nearly backdoored mainstream Linux |
 
-The defensive answer the industry and regulators converged on — pushed into federal procurement by US Executive Order 14028 — is **supply chain integrity**: SBOM, provenance, signing, and *enforcement at deploy time*. I built Nahui as a working reference implementation of exactly that.
+The defensive answer the industry and regulators converged on (pushed into federal procurement by US Executive Order 14028) is **supply chain integrity**: SBOM, provenance, signing, and *enforcement at deploy time*. I built Nahui as a working reference implementation of exactly that.
 
 ---
 
@@ -128,13 +128,13 @@ The two deploys above are the test: the verified image runs, the unsigned one is
 
 ### Seeing it work
 
-**Verify the artifact came from the pipeline** — the signature, then the SBOM and provenance attestations:
+**Verify the artifact came from the pipeline.** First the signature, then the SBOM and provenance attestations:
 
 ![verify signature](docs/media/01-verify-signature.gif)
 
 ![verify attestations](docs/media/02-verify-attestations.gif)
 
-**Enforce it at the cluster** — the verified image is admitted and runs:
+**Enforce it at the cluster.** The verified image is admitted and runs:
 
 ![verified runs](docs/media/03-verified-runs.gif)
 
@@ -146,12 +146,12 @@ An untrusted image (a normal public nginx) is denied before it can schedule:
 
 ## Roadmap
 
-- [x] **Phase 1** — Baseline app + naive (insecure) pipeline
-- [x] **Phase 2** — SBOM generation + vuln scanning, gate on critical CVEs
-- [x] **Phase 3** — cosign keyless signing + Rekor transparency entries
-- [x] **Phase 4** — SLSA provenance attestation (target Build L3)
-- [x] **Phase 5** — Admission control: verify signature + provenance + SBOM before scheduling
-- [x] **Phase 6** — Threat model write-up + architecture diagram + demo recording
+- [x] **Phase 1**: Baseline app + naive (insecure) pipeline
+- [x] **Phase 2**: SBOM generation + vuln scanning, gate on critical CVEs
+- [x] **Phase 3**: cosign keyless signing + Rekor transparency entries
+- [x] **Phase 4**: SLSA provenance attestation (target Build L3)
+- [x] **Phase 5**: Admission control: verify signature + provenance + SBOM before scheduling
+- [x] **Phase 6**: Threat model write-up + architecture diagram + demo recording
 
 ### Stretch
 
@@ -164,7 +164,7 @@ An untrusted image (a normal public nginx) is denied before it can schedule:
 
 ## Why this exists
 
-I built Nahui to demonstrate my fluency in the current software supply chain security stack — Sigstore, SLSA, SBOM, and policy-as-code enforcement — across the full SDLC: build → scan → sign → attest → enforce.
+I built Nahui to demonstrate my fluency in the current software supply chain security stack (Sigstore, SLSA, SBOM, and policy-as-code enforcement) across the full SDLC: build → scan → sign → attest → enforce.
 
 ## License
 
