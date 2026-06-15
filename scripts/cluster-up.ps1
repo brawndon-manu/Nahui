@@ -63,10 +63,20 @@ kubectl apply --server-side -f https://github.com/kyverno/kyverno/releases/lates
 if ($LASTEXITCODE -ne 0) { Die "Kyverno install failed." }
 kubectl wait --for=condition=Available deployment/kyverno-admission-controller -n kyverno --timeout=180s
 
-# 3. Namespace + policy.
+# 3. Namespace + policy. The Kyverno webhook can refuse connections for a few
+#    seconds after its deployment reports Available, so retry the policy apply
+#    until it goes through.
 Write-Host "Applying namespace and verify-images policy..."
 kubectl apply -f deploy/namespace.yaml
-kubectl apply -f policies/verify-images.yaml
+
+$applied = $false
+for ($i = 1; $i -le 12; $i++) {
+  kubectl apply -f policies/verify-images.yaml 2>$null
+  if ($LASTEXITCODE -eq 0) { $applied = $true; break }
+  Write-Host "  Kyverno webhook not ready yet, retrying ($i)..."
+  Start-Sleep -Seconds 5
+}
+if (-not $applied) { Die "Failed to apply policy (Kyverno webhook never became ready)." }
 
 Write-Host ""
 Write-Host "Demo environment ready. Try it:" -ForegroundColor Green
